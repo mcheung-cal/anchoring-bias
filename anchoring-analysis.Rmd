@@ -1,0 +1,86 @@
+---
+title: "internal_analysis"
+author: "Brett Brandom"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+install.packages("knitr")
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages, echo=FALSE, message=FALSE}
+library(tidyverse)
+library(data.table)
+library(stargazer)
+```
+
+# read csv
+
+```{r}
+d <- fread("data.csv")
+# first two rows are not needed
+d <- d[3:.N]
+# remove preview data
+d <- d[DistributionChannel == "anonymous"]
+# combine responses
+d[, response := paste(Q17, Q18, sep = "")]
+d <- d[response != ""]
+
+# rename columns
+setnames(d, c("FL_3_DO", "FL_15_DO"), c("Anchor", "ChartType"))
+
+# grab columns we want
+d <- d[, .(Anchor, ChartType, response)]
+
+# re-encode response
+d[, response := if_else(response == "Yes", 1, 0)]
+
+# set Anchor and ChartType to factors
+d$Anchor = factor(d$Anchor, levels = c("ControlBlock", "TreatmentLow", "TreatmentHigh"))
+d$ChartType = factor(d$ChartType, levels = c("DownwardTrend", "UpwardTrend"))
+```
+
+
+```{r}
+m1 <- d[, lm(response ~ ChartType)]
+summary(m1)
+
+```
+
+```{r}
+m2 <- d[, lm(response ~ Anchor + ChartType)]
+summary(m2)
+```
+
+```{r}
+m3 <- d[, lm(response ~ Anchor * ChartType)]
+summary(m3)
+```
+
+```{r}
+library(sandwich)
+
+stargazer(m1, m2, m3, type = "text", se = list(
+    sqrt(diag(vcovHC(m1, type = "HC1"))),
+    sqrt(diag(vcovHC(m2, type = "HC1"))),
+    sqrt(diag(vcovHC(m3, type = "HC1")))
+), out = "model_output.txt", title = "Regression Results for the Hypothetical Business Scenario Experiment", dep.var.labels = "Perceived Success of Q4 Sales", notes = "Regression results from a 3x2 factorial experiment.")
+```
+
+```{r}
+d[, .(n = .N), by=.(Anchor, ChartType, response)]
+```
+
+```{r}
+summary(d[, glm(response ~ Anchor + ChartType, family=binomial(link='logit'))])
+```
+
+```{r}
+summary(d[, glm(response ~ Anchor * ChartType, family=binomial(link='logit'))])
+```
+
+

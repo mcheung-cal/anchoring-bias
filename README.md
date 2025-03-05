@@ -26,4 +26,9 @@ This project investigates how the **anchoring-and-adjustment heuristic** influen
 ## 🚀 Future Directions  
 - Expanding the study to **different business scenarios** to assess generalizability.  
 - Testing **alternative, less contextually relevant anchors** to isolate the anchoring effect from logical inference.  
-- Increasing sample size to further explore potential **interaction effects**.  
+- Increasing sample size to further explore potential **interaction effects**.
+
+## 👥 Contributors  
+- **Michelle Cheung** 
+- **Brett Brandom** 
+- **Andrew Wright** 
